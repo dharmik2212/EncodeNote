@@ -192,6 +192,36 @@
             -webkit-user-select: none;
             user-select: none;
         }
+
+        /* Mobile touch targets: ensure minimum 48x48px hit area */
+        @media (max-width: 640px) {
+
+            button,
+            a,
+            [role="button"] {
+                position: relative;
+            }
+
+            button::after,
+            a::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                min-width: 48px;
+                min-height: 48px;
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        /* Bigger spacing for mobile footer links */
+        @media (max-width: 640px) {
+            .mobile-touch-link {
+                padding: 8px 4px;
+            }
+        }
     </style>
 </head>
 
@@ -222,8 +252,9 @@
     <!-- Header -->
     <header
         class="relative z-10 flex items-center justify-between px-4 py-4 sm:px-6 sm:py-6 md:px-12 w-full border-b-3 border-black dark:border-[#333] bg-background-light dark:bg-[#111] transition-colors duration-300">
-        <div class="flex items-center gap-3 cursor-pointer" onclick="lockVault()">
-            <div class="w-8 h-8 bg-black dark:bg-accent flex items-center justify-center text-accent dark:text-black">
+        <div class="flex items-center gap-3 cursor-pointer min-h-[48px] py-1" onclick="lockVault()">
+            <div
+                class="w-10 h-10 sm:w-8 sm:h-8 bg-black dark:bg-accent flex items-center justify-center text-accent dark:text-black">
                 <span id="header-icon" class="material-symbols-outlined text-xl font-bold">lock</span>
             </div>
             <h1 class="text-primary dark:text-white font-display text-lg sm:text-xl tracking-tighter uppercase">
@@ -238,7 +269,7 @@
             </button>
             <!-- Exit button (visible in vault view) -->
             <button id="lock-btn"
-                class="hidden items-center gap-2 px-4 py-2 bg-primary dark:bg-accent text-accent dark:text-black border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:text-primary dark:hover:bg-white transition-all duration-150 hover:-translate-y-0.5 font-display text-sm tracking-widest"
+                class="hidden items-center gap-2 px-4 sm:px-4 py-3 sm:py-2 min-h-[48px] bg-primary dark:bg-accent text-accent dark:text-black border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:text-primary dark:hover:bg-white transition-all duration-150 hover:-translate-y-0.5 font-display text-sm tracking-widest"
                 onclick="lockVault()">
                 <span class="material-symbols-outlined text-lg">logout</span>
                 EXIT
@@ -320,23 +351,23 @@
         <!-- Vault Toolbar -->
         <div
             class="flex flex-wrap items-center justify-between px-4 sm:px-6 py-3 gap-2 border-b-3 border-black dark:border-[#333] bg-white dark:bg-[#1a1a1a] transition-colors duration-300">
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <span class="material-symbols-outlined text-xl dark:text-gray-300">edit_note</span>
                 <span id="vault-label"
-                    class="font-mono text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400">NOTEBOOK
+                    class="font-mono text-xs sm:text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400 hidden sm:inline">NOTEBOOK
                     OPEN</span>
                 <!-- Image Upload Button -->
                 <button onclick="document.getElementById('image-upload').click()"
-                    class="flex items-center gap-1 px-3 py-2 sm:py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300 min-h-[44px] sm:min-h-0"
+                    class="flex items-center gap-1 px-4 py-2.5 sm:px-3 sm:py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300 min-h-[48px] sm:min-h-0 min-w-[48px]"
                     title="Upload Image">
-                    <span class="material-symbols-outlined text-base">image</span>
-                    IMG
+                    <span class="material-symbols-outlined text-lg sm:text-base">image</span>
+                    <span class="hidden sm:inline">IMG</span>
                 </button>
                 <!-- Share Button -->
                 <button id="share-btn" onclick="shareVault()"
-                    class="flex items-center gap-1 px-3 py-2 sm:py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300 min-h-[44px] sm:min-h-0"
+                    class="flex items-center gap-1 px-4 py-2.5 sm:px-3 sm:py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300 min-h-[48px] sm:min-h-0 min-w-[48px]"
                     title="Copy share link">
-                    <span class="material-symbols-outlined text-base">share</span>
+                    <span class="material-symbols-outlined text-lg sm:text-base">share</span>
                     <span id="share-btn-text">SHARE</span>
                 </button>
                 <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)"
@@ -395,17 +426,17 @@
     <div class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-black dark:bg-[#0a0a0a] text-white px-4 sm:px-6 py-3 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-xs font-mono tracking-widest uppercase transition-colors duration-300"
         style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))">
         <span class="text-accent font-bold">Created by Dharmik Tarpada</span>
-        <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+        <div class="flex flex-wrap items-center justify-center gap-1 sm:gap-4">
             <a href="https://github.com/dharmik2212" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
                 &#9679; GITHUB
             </a>
             <a href="https://www.instagram.com/dharmik_tarpada" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
                 &#9679; INSTA ID
             </a>
             <a href="https://www.linkedin.com/in/dharmik-tarpada-439396272/" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
                 &#9679; LINKEDIN
             </a>
         </div>
