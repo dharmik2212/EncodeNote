@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>EncodeNote — Shared Encrypted Notebook</title>
+    <meta name="description"
+        content="EncodeNote: Enter a codeword to access a shared encrypted notebook. Same codeword, same notebook. No accounts, no traces." />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Archivo+Black&display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "accent": "#FFF500",
+                        "background-light": "#F4F4F0",
+                        "background-dark": "#222210",
+                        "danger": "#FF4400",
+                    },
+                    fontFamily: {
+                        "display": ["Archivo Black", "sans-serif"],
+                        "mono": ["Space Mono", "monospace"],
+                        "grotesk": ["Space Grotesk", "sans-serif"],
+                    },
+                    boxShadow: {
+                        "hard": "8px 8px 0px 0px #000000",
+                        "hard-hover": "12px 12px 0px 0px #000000",
+                        "hard-sm": "4px 4px 0px 0px #000000",
+                    },
+                    borderWidth: {
+                        "3": "3px",
+                    },
+                    animation: {
+                        "blink": "blink 1s step-end infinite",
+                        "barber-pole": "barber-pole 1s linear infinite",
+                        "shake": "shake 0.4s ease-in-out",
+                        "fadeIn": "fadeIn 0.3s ease-out forwards",
+                        "slideUp": "slideUp 0.4s cubic-bezier(0.16,1,0.3,1) forwards",
+                    },
+                    keyframes: {
+                        blink: {
+                            "0%, 100%": { opacity: "1" },
+                            "50%": { opacity: "0" },
+                        },
+                        "barber-pole": {
+                            "100%": { backgroundPosition: "100% 100%" },
+                        },
+                        shake: {
+                            "0%, 100%": { transform: "translateX(0)" },
+                            "20%": { transform: "translateX(-12px)" },
+                            "40%": { transform: "translateX(10px)" },
+                            "60%": { transform: "translateX(-6px)" },
+                            "80%": { transform: "translateX(4px)" },
+                        },
+                        fadeIn: {
+                            "from": { opacity: "0" },
+                            "to": { opacity: "1" },
+                        },
+                        slideUp: {
+                            "from": { opacity: "0", transform: "translateY(30px)" },
+                            "to": { opacity: "1", transform: "translateY(0)" },
+                        },
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        .neo-input::placeholder {
+            color: #999999;
+            opacity: 1;
+        }
+
+        .bg-striped {
+            background-image: linear-gradient(45deg,
+                    #000000 25%,
+                    #FFF500 25%,
+                    #FFF500 50%,
+                    #000000 50%,
+                    #000000 75%,
+                    #FFF500 75%,
+                    #FFF500 100%);
+            background-size: 40px 40px;
+        }
+
+        body {
+            font-family: 'Space Mono', monospace;
+        }
+
+        /* Dark mode overrides */
+        .dark .neo-input::placeholder {
+            color: #666;
+        }
+
+        .dark .neo-input {
+            background: #1a1a1a;
+            color: #F4F4F0;
+            border-color: #555;
+        }
+
+        .dark .neo-input:focus {
+            border-color: #FFF500;
+        }
+
+        .dark #vault-editor:empty::before {
+            color: #555;
+        }
+
+        .dark #vault-editor img {
+            border-color: #555;
+            box-shadow: 4px 4px 0px 0px #555;
+        }
+
+        .dark #vault-editor img:hover {
+            box-shadow: 6px 6px 0px 0px #555;
+        }
+
+        #vault-editor:focus {
+            outline: none;
+        }
+
+        #vault-editor {
+            resize: none;
+            min-height: 100%;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        #vault-editor:empty::before {
+            content: 'Start typing your notes here...\A\AEverything is encrypted with your codeword.\AShare the codeword with someone to collaborate.\A\A📷 Paste images with Ctrl+V or use the upload button.';
+            white-space: pre-wrap;
+            color: #9ca3af;
+            pointer-events: none;
+        }
+
+        #vault-editor img {
+            max-width: 100%;
+            height: auto;
+            border: 3px solid #000;
+            margin: 12px 0;
+            display: block;
+            box-shadow: 4px 4px 0px 0px #000;
+        }
+
+        #vault-editor img:hover {
+            box-shadow: 6px 6px 0px 0px #000;
+            transform: translate(-1px, -1px);
+            transition: all 0.15s ease;
+        }
+
+        /* Scrollbar styling */
+        #vault-editor::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        #vault-editor::-webkit-scrollbar-track {
+            background: #F4F4F0;
+            border-left: 3px solid #000;
+        }
+
+        #vault-editor::-webkit-scrollbar-thumb {
+            background: #000;
+        }
+
+        #vault-editor::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+
+        .view-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-[#111] h-screen flex flex-col relative overflow-hidden transition-colors duration-300">
+
+    <!-- Pattern Overlay for texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
+        style="background-image: radial-gradient(currentColor 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-90 hidden">
+        <div class="text-center">
+            <div class="w-48 h-6 bg-striped animate-barber-pole mx-auto mb-6 border-3 border-accent"></div>
+            <p id="loading-text" class="font-display text-accent text-2xl uppercase tracking-widest">DECRYPTING_</p>
+        </div>
+    </div>
+
+    <!-- Error Overlay -->
+    <div id="error-overlay"
+        class="fixed inset-0 z-50 bg-danger flex flex-col items-center justify-center hidden cursor-pointer"
+        onclick="hideError()">
+        <h1 class="font-display text-white text-6xl md:text-9xl animate-blink">ERROR</h1>
+        <p id="error-message" class="font-mono text-white text-lg mt-4 opacity-80">ACCESS_DENIED</p>
+        <p class="font-mono text-white text-xs mt-6 opacity-50">CLICK TO DISMISS</p>
+    </div>
+
+    <!-- Header -->
+    <header
+        class="relative z-10 flex items-center justify-between px-6 py-6 md:px-12 w-full border-b-3 border-black dark:border-[#333] bg-background-light dark:bg-[#111] transition-colors duration-300">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="lockVault()">
+            <div class="w-8 h-8 bg-black dark:bg-accent flex items-center justify-center text-accent dark:text-black">
+                <span id="header-icon" class="material-symbols-outlined text-xl font-bold">lock</span>
+            </div>
+            <h1 class="text-primary dark:text-white font-display text-xl tracking-tighter uppercase">ENCODENOTE</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <!-- Dark/Light Toggle -->
+            <button id="theme-toggle" onclick="toggleTheme()"
+                class="w-10 h-10 flex items-center justify-center border-3 border-black dark:border-[#555] bg-background-light dark:bg-[#222] hover:bg-accent dark:hover:bg-accent hover:text-black transition-all duration-150 shadow-hard-sm dark:shadow-none"
+                title="Toggle dark/light mode">
+                <span id="theme-icon" class="material-symbols-outlined text-xl dark:text-white">dark_mode</span>
+            </button>
+            <!-- Exit button (visible in vault view) -->
+            <button id="lock-btn"
+                class="hidden items-center gap-2 px-4 py-2 bg-primary dark:bg-accent text-accent dark:text-black border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:text-primary dark:hover:bg-white transition-all duration-150 hover:-translate-y-0.5 font-display text-sm tracking-widest"
+                onclick="lockVault()">
+                <span class="material-symbols-outlined text-lg">logout</span>
+                EXIT
+            </button>
+            <div id="server-status"
+                class="hidden md:flex items-center gap-2 text-xs font-bold font-mono tracking-widest dark:text-gray-400">
+                <span id="status-dot" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span id="status-text">READY</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================= -->
+    <!-- AIRLOCK VIEW (entry screen)                   -->
+    <!-- ============================================= -->
+    <main id="airlock-view"
+        class="relative z-10 flex-grow flex flex-col items-center justify-center p-6 w-full view-transition">
+        <div class="w-full max-w-4xl flex flex-col items-center gap-8">
+            <!-- Hero Text -->
+            <div class="text-center space-y-2 mb-4">
+                <h2
+                    class="font-display text-4xl md:text-5xl lg:text-6xl text-primary dark:text-white uppercase leading-none tracking-tighter">
+                    Shared_Secret<br />Notebook
+                </h2>
+                <p class="font-mono text-sm md:text-base text-gray-600 dark:text-gray-400 max-w-md mx-auto">
+                    Same codeword, same notebook. No accounts.
+                </p>
+            </div>
+            <!-- Input Module -->
+            <div class="w-full flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-0 group">
+                <!-- Codeword Input -->
+                <div class="relative flex-grow md:max-w-xl w-full">
+                    <label class="sr-only" for="codeword">Enter Codeword</label>
+                    <div class="absolute inset-y-0 left-0 pl-6 flex items-center pointer-events-none">
+                        <span
+                            class="material-symbols-outlined text-3xl md:text-4xl text-black dark:text-gray-400">key</span>
+                    </div>
+                    <input autocomplete="off" autofocus id="codeword" name="codeword"
+                        class="neo-input w-full h-20 md:h-24 pl-16 pr-6 bg-white dark:bg-[#1a1a1a] border-3 border-black dark:border-[#555] text-2xl md:text-4xl font-mono font-bold uppercase placeholder:text-gray-300 text-primary dark:text-white shadow-hard dark:shadow-none focus:shadow-hard-hover dark:focus:shadow-none focus:outline-none focus:ring-0 focus:border-accent transition-all duration-150 transform focus:-translate-y-1 focus:-translate-x-1 dark:focus:translate-y-0 dark:focus:translate-x-0"
+                        placeholder="ENTER_CODEWORD_" type="text" onkeydown="if(event.key==='Enter') openVault()" />
+                </div>
+                <!-- Access Button -->
+                <button id="open-btn" onclick="openVault()"
+                    class="h-20 md:h-24 px-8 md:px-12 bg-primary dark:bg-accent text-accent dark:text-black border-3 border-black dark:border-[#555] border-t-3 md:border-l-0 shadow-hard dark:shadow-none md:shadow-none hover:bg-accent hover:text-primary dark:hover:bg-white transition-colors duration-150 flex items-center justify-center relative">
+                    <span class="font-display text-xl md:text-2xl tracking-widest">OPEN</span>
+                    <span
+                        class="material-symbols-outlined ml-2 text-2xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+            </div>
+            <!-- Hint -->
+            <div class="text-center mt-4">
+                <p class="font-mono text-xs text-gray-500 dark:text-gray-500 uppercase tracking-widest">
+                    <span class="bg-black dark:bg-accent text-white dark:text-black px-1 py-0.5 mr-1">HINT</span>
+                    Share a codeword with a friend to access the same notebook
+                </p>
+            </div>
+        </div>
+
+        <!-- Decorative Elements -->
+        <div class="absolute top-1/4 left-10 hidden lg:block opacity-20 dark:opacity-10">
+            <div class="border-l-3 border-black dark:border-gray-600 h-32 pl-2 font-mono text-xs tracking-widest dark:text-gray-500"
+                style="writing-mode: vertical-rl;">
+                SECTOR_7G // UNCLASSIFIED
+            </div>
+        </div>
+        <div class="absolute bottom-1/4 right-10 hidden lg:block opacity-20 dark:opacity-10">
+            <div
+                class="w-32 h-32 border-3 border-black dark:border-gray-600 rounded-full flex items-center justify-center animate-[spin_10s_linear_infinite] dark:text-gray-500">
+                <span class="material-symbols-outlined text-4xl">data_usage</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================= -->
+    <!-- VAULT VIEW (notebook editor)                  -->
+    <!-- ============================================= -->
+    <main id="vault-view"
+        class="relative z-10 flex-grow flex flex-col w-full hidden view-transition overflow-hidden min-h-0 dark:bg-[#111]">
+        <!-- Vault Toolbar -->
+        <div
+            class="flex items-center justify-between px-6 py-3 border-b-3 border-black dark:border-[#333] bg-white dark:bg-[#1a1a1a] transition-colors duration-300">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-xl dark:text-gray-300">edit_note</span>
+                <span id="vault-label"
+                    class="font-mono text-sm font-bold uppercase tracking-widest text-gray-600 dark:text-gray-400">NOTEBOOK
+                    OPEN</span>
+                <!-- Image Upload Button -->
+                <button onclick="document.getElementById('image-upload').click()"
+                    class="flex items-center gap-1 px-3 py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300"
+                    title="Upload Image">
+                    <span class="material-symbols-outlined text-base">image</span>
+                    IMG
+                </button>
+                <!-- Share Button -->
+                <button id="share-btn" onclick="shareVault()"
+                    class="flex items-center gap-1 px-3 py-1 bg-background-light dark:bg-[#222] border-3 border-black dark:border-[#555] shadow-hard-sm dark:shadow-none hover:bg-accent hover:shadow-hard dark:hover:shadow-none hover:text-black transition-all duration-150 hover:-translate-y-0.5 font-mono text-xs font-bold uppercase tracking-widest dark:text-gray-300"
+                    title="Copy share link">
+                    <span class="material-symbols-outlined text-base">share</span>
+                    <span id="share-btn-text">SHARE</span>
+                </button>
+                <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)"
+                    multiple />
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="live-badge"
+                    class="hidden items-center gap-1.5 px-3 py-1 bg-green-500 border-3 border-black dark:border-[#555] font-mono text-xs font-bold uppercase tracking-widest text-white">
+                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                    <span id="live-text">LIVE</span>
+                </span>
+                <span id="save-indicator"
+                    class="font-mono text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+                    READY
+                </span>
+            </div>
+        </div>
+        <!-- Editor -->
+        <div class="flex-grow overflow-y-auto min-h-0" style="flex: 1 1 0%;">
+            <div id="vault-editor" contenteditable="true"
+                class="w-full p-6 md:p-10 bg-background-light dark:bg-[#111] font-mono text-base md:text-lg leading-relaxed text-primary dark:text-gray-200 border-0 transition-colors duration-300"
+                style="min-height: 100%; outline: none;" oninput="onEditorInput()" onpaste="handlePaste(event)"></div>
+        </div>
+    </main>
+
+    <!-- Footer Status -->
+    <footer
+        class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-background-light dark:bg-[#111] p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-xs font-mono font-bold uppercase tracking-wide dark:text-gray-400 transition-colors duration-300">
+        <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">terminal</span>
+                <span id="footer-system-status">SYSTEM STATUS: ONLINE</span>
+            </div>
+            <div class="text-gray-500">
+                ENCRYPTION: AES-256-GCM
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div id="footer-state" class="flex items-center gap-2">
+                <span id="footer-state-dot" class="w-3 h-3 bg-accent border-2 border-black dark:border-[#555]"></span>
+                <span id="footer-state-text">IDLE</span>
+            </div>
+            <div id="footer-stats" class="hidden items-center gap-4 text-gray-500">
+                <span id="char-count">0 CHARS</span>
+                <span>•</span>
+                <span id="word-count">0 WORDS</span>
+            </div>
+            <div class="border-l-3 border-black dark:border-[#555] pl-6 ml-2">
+                <span id="footer-latency">LATENCY: --</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Creator Footer -->
+    <div
+        class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-black dark:bg-[#0a0a0a] text-white px-6 py-3 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-xs font-mono tracking-widest uppercase transition-colors duration-300">
+        <span class="text-accent font-bold">Created by Dharmik Tarpada</span>
+        <div class="flex items-center gap-4">
+            <a href="https://github.com/dharmik2212" target="_blank" rel="noopener"
+                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                &#9679; GITHUB
+            </a>
+            <a href="https://www.instagram.com/dharmik_tarpada" target="_blank" rel="noopener"
+                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                &#9679; INSTA ID
+            </a>
+            <a href="https://www.linkedin.com/in/dharmik-tarpada-439396272/" target="_blank" rel="noopener"
+                class="hover:text-accent transition-colors duration-150 flex items-center gap-1">
+                &#9679; LINKEDIN
+            </a>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- JAVASCRIPT ENGINE                             -->
+    <!-- ============================================= -->
+    <script>
+        // ===== THEME =====
+        function initTheme() {
+            const saved = localStorage.getItem('encodenote-theme');
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').textContent = 'light_mode';
+            }
+        }
+        initTheme();
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('encodenote-theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
+        }
+
+        // ===== STATE =====
+        let currentKey = null;       // CryptoKey for AES-256-GCM
+        let currentHash = null;      // SHA-256 hex hash of codeword (lookup key)
+        let currentSalt = null;      // Uint8Array salt for PBKDF2
+        let currentCodeword = null;  // stored for share link
+        let saveTimeout = null;      // debounce timer for auto-save
+        let isSaving = false;
+        let ws = null;               // WebSocket connection
+        let isReceivingUpdate = false; // guard to prevent save loop on remote update
+
+        // ===== CRYPTO UTILS =====
+
+        // SHA-256 hash of codeword → hex string (used as lookup key on server)
+        async function hashCodeword(codeword) {
+            const encoded = new TextEncoder().encode(codeword.trim().toUpperCase());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        // PBKDF2: codeword + salt → AES-256-GCM CryptoKey
+        async function deriveKey(codeword, salt) {
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                new TextEncoder().encode(codeword.trim().toUpperCase()),
+                'PBKDF2',
+                false,
+                ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // ===== BASE64 HELPERS (safe for large data) =====
+        function uint8ToBase64(uint8Array) {
+            let binary = '';
+            const chunkSize = 8192;
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                const chunk = uint8Array.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
+            return btoa(binary);
+        }
+
+        function base64ToUint8(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        // Encrypt plaintext → { iv (base64), ciphertext (base64) }
+        async function encrypt(key, plaintext) {
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const encoded = new TextEncoder().encode(plaintext);
+            const cipherBuffer = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                key,
+                encoded
+            );
+            return {
+                iv: uint8ToBase64(iv),
+                ciphertext: uint8ToBase64(new Uint8Array(cipherBuffer))
+            };
+        }
+
+        // Decrypt → plaintext string (throws on wrong key)
+        async function decrypt(key, ivB64, ciphertextB64) {
+            const iv = base64ToUint8(ivB64);
+            const ciphertext = base64ToUint8(ciphertextB64);
+            const plainBuffer = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                key,
+                ciphertext
+            );
+            return new TextDecoder().decode(plainBuffer);
+        }
+
+        // ===== API CALLS =====
+
+        async function fetchNote(hash) {
+            const start = performance.now();
+            try {
+                const res = await fetch(`/api/note/${hash}`);
+                updateLatency(performance.now() - start);
+                if (res.status === 404) return null;
+                if (!res.ok) throw new Error('Server error');
+                return await res.json();
+            } catch (err) {
+                updateLatency(performance.now() - start);
+                throw err;
+            }
+        }
+
+        async function saveNote(hash, salt, iv, ciphertext) {
+            const start = performance.now();
+            const saltB64 = uint8ToBase64(salt);
+            const res = await fetch(`/api/note/${hash}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ salt: saltB64, iv, ciphertext })
+            });
+            updateLatency(performance.now() - start);
+            if (!res.ok) throw new Error('Save failed');
+        }
+
+        // ===== CORE LOGIC =====
+
+        async function openVault() {
+            const input = document.getElementById('codeword');
+            const codeword = input.value.trim();
+
+            // Validate
+            if (!codeword) {
+                input.parentElement.classList.add('animate-shake');
+                setTimeout(() => input.parentElement.classList.remove('animate-shake'), 500);
+                return;
+            }
+
+            showLoading('CONNECTING_');
+            setFooterState('CONNECTING', '#FFF500');
+            currentCodeword = codeword;
+
+            try {
+                // 1. Hash codeword for server lookup
+                currentHash = await hashCodeword(codeword);
+                showLoading('DECRYPTING_');
+
+                // 2. Check if vault exists on server
+                const existing = await fetchNote(currentHash);
+
+                if (existing) {
+                    // Vault exists — decrypt it
+                    const saltBytes = Uint8Array.from(atob(existing.salt), c => c.charCodeAt(0));
+                    currentSalt = saltBytes;
+                    currentKey = await deriveKey(codeword, saltBytes);
+
+                    try {
+                        const plaintext = await decrypt(currentKey, existing.iv, existing.ciphertext);
+                        showVault(plaintext, codeword);
+                    } catch (e) {
+                        // Wrong codeword for this vault — this shouldn't happen with hash-based lookup
+                        // but handle gracefully
+                        hideLoading();
+                        showError('DECRYPTION_FAILED — VAULT_CORRUPTED');
+                        return;
+                    }
+                } else {
+                    // New vault — create it
+                    showLoading('INITIALIZING_');
+                    currentSalt = crypto.getRandomValues(new Uint8Array(16));
+                    currentKey = await deriveKey(codeword, currentSalt);
+
+                    // Save empty vault
+                    const encrypted = await encrypt(currentKey, '');
+                    await saveNote(currentHash, currentSalt, encrypted.iv, encrypted.ciphertext);
+
+                    showVault('', codeword);
+                }
+            } catch (err) {
+                hideLoading();
+                showError('CONNECTION_FAILED — CHECK_SERVER');
+                console.error(err);
+            }
+        }
+
+        // ===== WEBSOCKET =====
+        function connectWebSocket() {
+            if (ws) ws.close();
+
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}`);
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'join', hash: currentHash }));
+            };
+
+            ws.onmessage = async (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+
+                    if (msg.type === 'joined' || msg.type === 'users') {
+                        const count = msg.users || msg.count || 1;
+                        const badge = document.getElementById('live-badge');
+                        const text = document.getElementById('live-text');
+                        badge.classList.remove('hidden');
+                        badge.classList.add('flex');
+                        text.textContent = count > 1 ? `LIVE · ${count}` : 'LIVE';
+                    }
+
+                    if (msg.type === 'updated' && currentKey && currentHash) {
+                        // Another user saved — fetch latest and update editor
+                        isReceivingUpdate = true;
+                        try {
+                            const data = await fetchNote(currentHash);
+                            if (data) {
+                                const plaintext = await decrypt(currentKey, data.iv, data.ciphertext);
+                                const editor = document.getElementById('vault-editor');
+
+                                // Save cursor position
+                                const sel = window.getSelection();
+                                let cursorOffset = 0;
+                                if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+                                    cursorOffset = sel.getRangeAt(0).startOffset;
+                                }
+
+                                editor.innerHTML = plaintext;
+                                updateStats();
+
+                                // Flash sync indicator
+                                setSaveIndicator('SYNCED', '#3b82f6');
+                                setTimeout(() => setSaveIndicator('SAVED', '#22c55e'), 1500);
+                            }
+                        } catch (e) {
+                            console.error('Sync error:', e);
+                        }
+                        isReceivingUpdate = false;
+                    }
+                } catch { }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('live-badge').classList.add('hidden');
+                document.getElementById('live-badge').classList.remove('flex');
+                // Auto-reconnect if still in vault
+                if (currentKey && currentHash) {
+                    setTimeout(connectWebSocket, 2000);
+                }
+            };
+        }
+
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            document.getElementById('live-badge').classList.add('hidden');
+            document.getElementById('live-badge').classList.remove('flex');
+        }
+
+        async function lockVault() {
+            if (!currentKey) return; // already on airlock
+
+            // Save before locking
+            if (saveTimeout) clearTimeout(saveTimeout);
+            await doSave();
+
+            // Reset state
+            currentKey = null;
+            currentHash = null;
+            currentSalt = null;
+            currentCodeword = null;
+
+            // Disconnect WebSocket
+            disconnectWebSocket();
+
+            // Switch views
+            document.getElementById('vault-view').classList.add('hidden');
+            document.getElementById('airlock-view').classList.remove('hidden');
+            document.getElementById('lock-btn').classList.add('hidden');
+            document.getElementById('lock-btn').classList.remove('flex');
+            document.getElementById('footer-stats').classList.add('hidden');
+            document.getElementById('footer-stats').classList.remove('flex');
+            document.getElementById('header-icon').textContent = 'lock';
+            document.getElementById('vault-editor').innerHTML = '';
+
+            setFooterState('IDLE', '#FFF500');
+            document.getElementById('footer-system-status').textContent = 'SYSTEM STATUS: ONLINE';
+
+            // Refocus codeword input
+            const input = document.getElementById('codeword');
+            input.value = '';
+            input.focus();
+        }
+
+        // ===== EDITOR / AUTO-SAVE =====
+
+        function onEditorInput() {
+            updateStats();
+            if (isReceivingUpdate) return; // don't auto-save during remote sync
+            setSaveIndicator('UNSAVED', '#FF4400');
+
+            if (saveTimeout) clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => doSave(), 1500);
+        }
+
+        async function doSave() {
+            if (!currentKey || !currentHash || isSaving) return;
+            isSaving = true;
+            setSaveIndicator('SAVING…', '#FFF500');
+            setFooterState('SYNCING', '#FFF500');
+
+            try {
+                const content = document.getElementById('vault-editor').innerHTML;
+                const encrypted = await encrypt(currentKey, content);
+                await saveNote(currentHash, currentSalt, encrypted.iv, encrypted.ciphertext);
+                setSaveIndicator('SAVED', '#22c55e');
+                setFooterState('ACTIVE', '#22c55e');
+            } catch (err) {
+                setSaveIndicator('SAVE_FAILED', '#FF4400');
+                setFooterState('ERROR', '#FF4400');
+                console.error(err);
+            }
+            isSaving = false;
+        }
+
+        function updateStats() {
+            const text = document.getElementById('vault-editor').innerText || '';
+            document.getElementById('char-count').textContent = text.length + ' CHARS';
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            document.getElementById('word-count').textContent = words + ' WORDS';
+        }
+
+        // ===== UI HELPERS =====
+
+        function showVault(content, codeword) {
+            hideLoading();
+
+            document.getElementById('vault-label').textContent = 'NOTEBOOK OPEN';
+
+            // Fill editor
+            document.getElementById('vault-editor').innerHTML = content;
+
+            // Switch views
+            document.getElementById('airlock-view').classList.add('hidden');
+            document.getElementById('vault-view').classList.remove('hidden');
+            document.getElementById('vault-view').classList.add('animate-fadeIn');
+            document.getElementById('lock-btn').classList.remove('hidden');
+            document.getElementById('lock-btn').classList.add('flex');
+            document.getElementById('footer-stats').classList.remove('hidden');
+            document.getElementById('footer-stats').classList.add('flex');
+            document.getElementById('header-icon').textContent = 'lock_open';
+
+            setFooterState('ACTIVE', '#22c55e');
+            document.getElementById('footer-system-status').textContent = 'VAULT: OPEN';
+            setSaveIndicator('SAVED', '#22c55e');
+            updateStats();
+
+            // Connect WebSocket for real-time sync
+            connectWebSocket();
+
+            // Focus editor
+            const editor = document.getElementById('vault-editor');
+            editor.focus();
+            // Move cursor to end
+            const range = document.createRange();
+            const sel = window.getSelection();
+            if (editor.childNodes.length > 0) {
+                range.selectNodeContents(editor);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+
+        function showLoading(text) {
+            document.getElementById('loading-text').textContent = text || 'PROCESSING_';
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('error-message').textContent = message;
+            document.getElementById('error-overlay').classList.remove('hidden');
+            setTimeout(hideError, 3000);
+        }
+
+        function hideError() {
+            document.getElementById('error-overlay').classList.add('hidden');
+        }
+
+        function setSaveIndicator(text, dotColor) {
+            const indicator = document.getElementById('save-indicator');
+            const dot = indicator.querySelector('span');
+            dot.style.backgroundColor = dotColor;
+            indicator.lastChild.textContent = ' ' + text;
+        }
+
+        function setFooterState(text, dotColor) {
+            document.getElementById('footer-state-dot').style.backgroundColor = dotColor;
+            document.getElementById('footer-state-text').textContent = text;
+        }
+
+        function updateLatency(ms) {
+            document.getElementById('footer-latency').textContent = 'LATENCY: ' + Math.round(ms) + 'ms';
+        }
+
+        // ===== IMAGE HANDLING =====
+
+        function handlePaste(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    e.preventDefault();
+                    const file = item.getAsFile();
+                    insertImageFile(file);
+                    return;
+                }
+            }
+            // For non-image pastes, let default behavior handle text
+        }
+
+        function handleImageUpload(e) {
+            const files = e.target.files;
+            for (const file of files) {
+                if (file.type.startsWith('image/')) {
+                    insertImageFile(file);
+                }
+            }
+            // Reset input so the same file can be uploaded again
+            e.target.value = '';
+        }
+
+        function insertImageFile(file) {
+            // Limit to 10MB per image
+            if (file.size > 10 * 1024 * 1024) {
+                showError('IMAGE_TOO_LARGE — MAX_10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = file.name || 'Pasted image';
+
+                const editor = document.getElementById('vault-editor');
+
+                // Insert at cursor position
+                const sel = window.getSelection();
+                if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
+                    const range = sel.getRangeAt(0);
+                    range.deleteContents();
+                    range.insertNode(document.createElement('br'));
+                    range.insertNode(img);
+                    // Move cursor after the image
+                    range.setStartAfter(img);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                } else {
+                    editor.appendChild(img);
+                    editor.appendChild(document.createElement('br'));
+                }
+
+                onEditorInput();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ===== KEYBOARD SHORTCUTS =====
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd+S → manual save
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (currentKey) doSave();
+            }
+            // Escape → lock vault
+            if (e.key === 'Escape' && currentKey) {
+                lockVault();
+            }
+        });
+
+        // ===== SHARE =====
+        function shareVault() {
+            if (!currentCodeword) return;
+            const url = window.location.origin + '/#' + encodeURIComponent(currentCodeword);
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('share-btn-text');
+                btn.textContent = 'COPIED!';
+                setTimeout(() => { btn.textContent = 'SHARE'; }, 2000);
+            }).catch(() => {
+                // Fallback
+                prompt('Copy this link:', url);
+            });
+        }
+
+        // ===== AUTO-OPEN FROM URL HASH =====
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.slice(1);
+            if (hash) {
+                const codeword = decodeURIComponent(hash);
+                document.getElementById('codeword').value = codeword;
+                // Clear hash from URL so it's not visible in browser bar
+                history.replaceState(null, '', window.location.pathname);
+                openVault();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
