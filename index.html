@@ -396,21 +396,16 @@
 
     <!-- Footer Status -->
     <footer
-<<<<<<< HEAD
-        class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-background-light dark:bg-[#111] p-3 sm:p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 sm:gap-4 text-xs font-mono font-bold uppercase tracking-wide dark:text-gray-400 transition-colors duration-300">
-        <div class="flex flex-col gap-1">
-=======
         class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-background-light dark:bg-[#111] transition-colors duration-300">
         <!-- Status Row -->
         <div
-            class="px-4 py-2 flex flex-wrap justify-between items-center gap-2 text-xs font-mono font-bold uppercase tracking-wide dark:text-gray-400">
->>>>>>> 747cfea9a51f8172b0b11a11da278ef46e22586e
+            class="px-4 py-2 sm:py-3 flex flex-wrap justify-between items-center gap-2 text-xs font-mono font-bold uppercase tracking-wide dark:text-gray-400">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">terminal</span>
                 <span id="footer-system-status">SYSTEM STATUS: ONLINE</span>
                 <span class="text-gray-500 hidden md:inline">// AES-256-GCM</span>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 sm:gap-4">
                 <div id="footer-state" class="flex items-center gap-2">
                     <span id="footer-state-dot"
                         class="w-2.5 h-2.5 bg-accent border-2 border-black dark:border-[#555]"></span>
@@ -421,58 +416,22 @@
                     <span>•</span>
                     <span id="word-count">0 WORDS</span>
                 </div>
-                <span class="hidden md:inline border-l-3 border-black dark:border-[#555] pl-4"
+                <span class="hidden sm:inline border-l-3 border-black dark:border-[#555] pl-4"
                     id="footer-latency">LATENCY: --</span>
             </div>
         </div>
-<<<<<<< HEAD
-        <div class="flex flex-wrap items-center gap-3 sm:gap-6">
-            <div id="footer-state" class="flex items-center gap-2">
-                <span id="footer-state-dot" class="w-3 h-3 bg-accent border-2 border-black dark:border-[#555]"></span>
-                <span id="footer-state-text">IDLE</span>
-            </div>
-            <div id="footer-stats" class="hidden items-center gap-4 text-gray-500">
-                <span id="char-count">0 CHARS</span>
-                <span>•</span>
-                <span id="word-count">0 WORDS</span>
-            </div>
-            <div class="hidden sm:block border-l-3 border-black dark:border-[#555] pl-4 sm:pl-6 ml-1 sm:ml-2">
-                <span id="footer-latency">LATENCY: --</span>
-            </div>
-=======
         <!-- Creator Row -->
-        <div
-            class="px-4 py-2 border-t-3 border-black dark:border-[#333] bg-black dark:bg-[#0a0a0a] text-white flex items-center justify-center gap-3 md:gap-6 text-[10px] md:text-xs font-mono tracking-widest uppercase">
+        <div class="px-4 py-2 border-t-3 border-black dark:border-[#333] bg-black dark:bg-[#0a0a0a] text-white flex flex-wrap items-center justify-center gap-3 md:gap-6 text-[10px] md:text-xs font-mono tracking-widest uppercase"
+            style="padding-bottom: max(0.5rem, env(safe-area-inset-bottom))">
             <span class="text-accent font-bold">Dharmik Tarpada</span>
             <a href="https://github.com/dharmik2212" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150">GITHUB</a>
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 py-1 px-1 min-h-[44px] sm:min-h-0 flex items-center">GITHUB</a>
             <a href="https://www.instagram.com/dharmik_tarpada" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150">INSTA</a>
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 py-1 px-1 min-h-[44px] sm:min-h-0 flex items-center">INSTA</a>
             <a href="https://www.linkedin.com/in/dharmik-tarpada-439396272/" target="_blank" rel="noopener"
-                class="hover:text-accent transition-colors duration-150">LINKEDIN</a>
->>>>>>> 747cfea9a51f8172b0b11a11da278ef46e22586e
+                class="mobile-touch-link hover:text-accent transition-colors duration-150 py-1 px-1 min-h-[44px] sm:min-h-0 flex items-center">LINKEDIN</a>
         </div>
     </footer>
-
-    <!-- Creator Footer -->
-    <div class="relative z-10 w-full border-t-3 border-black dark:border-[#333] bg-black dark:bg-[#0a0a0a] text-white px-4 sm:px-6 py-3 flex flex-col md:flex-row items-center justify-center gap-2 md:gap-6 text-xs font-mono tracking-widest uppercase transition-colors duration-300"
-        style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom))">
-        <span class="text-accent font-bold">Created by Dharmik Tarpada</span>
-        <div class="flex flex-wrap items-center justify-center gap-1 sm:gap-4">
-            <a href="https://github.com/dharmik2212" target="_blank" rel="noopener"
-                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
-                &#9679; GITHUB
-            </a>
-            <a href="https://www.instagram.com/dharmik_tarpada" target="_blank" rel="noopener"
-                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
-                &#9679; INSTA ID
-            </a>
-            <a href="https://www.linkedin.com/in/dharmik-tarpada-439396272/" target="_blank" rel="noopener"
-                class="mobile-touch-link hover:text-accent transition-colors duration-150 flex items-center gap-1 py-2 px-2 sm:py-0 sm:px-0 min-h-[44px] sm:min-h-0">
-                &#9679; LINKEDIN
-            </a>
-        </div>
-    </div>
 
     <!-- ============================================= -->
     <!-- JAVASCRIPT ENGINE                             -->
