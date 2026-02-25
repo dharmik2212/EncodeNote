@@ -1,0 +1,4 @@
+node_modules/
+encodenote.db
+vaults/
+.env
