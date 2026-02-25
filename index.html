@@ -226,7 +226,7 @@
 </head>
 
 <body
-    class="bg-background-light dark:bg-[#111] h-screen flex flex-col relative overflow-hidden transition-colors duration-300">
+    class="bg-background-light dark:bg-[#111] min-h-screen min-h-[100dvh] flex flex-col relative overflow-x-hidden transition-colors duration-300">
 
     <!-- Pattern Overlay for texture -->
     <div class="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.06] pointer-events-none"
@@ -463,6 +463,52 @@
         let ws = null;               // WebSocket connection
         let isReceivingUpdate = false; // guard to prevent save loop on remote update
 
+        // ===== CURSOR HELPERS =====
+        // Calculate total character offset from start of editor to current cursor
+        function saveCursorPosition(editor) {
+            const sel = window.getSelection();
+            if (!sel.rangeCount || !editor.contains(sel.anchorNode)) return -1;
+
+            const range = sel.getRangeAt(0);
+            const preRange = document.createRange();
+            preRange.selectNodeContents(editor);
+            preRange.setEnd(range.startContainer, range.startOffset);
+            return preRange.toString().length;
+        }
+
+        // Restore cursor to the saved character offset via TreeWalker
+        function restoreCursorPosition(editor, charOffset) {
+            if (charOffset < 0 || !editor.childNodes.length) return;
+
+            const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            let counted = 0;
+
+            while (node = walker.nextNode()) {
+                const len = node.textContent.length;
+                if (counted + len >= charOffset) {
+                    const sel = window.getSelection();
+                    const range = document.createRange();
+                    try {
+                        range.setStart(node, charOffset - counted);
+                        range.collapse(true);
+                        sel.removeAllRanges();
+                        sel.addRange(range);
+                    } catch (e) { /* offset out of bounds, skip */ }
+                    return;
+                }
+                counted += len;
+            }
+
+            // If offset exceeds content, place cursor at end
+            const range = document.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
         // ===== CRYPTO UTILS =====
 
         // SHA-256 hash of codeword → hex string (used as lookup key on server)
@@ -660,15 +706,14 @@
                                 const plaintext = await decrypt(currentKey, data.iv, data.ciphertext);
                                 const editor = document.getElementById('vault-editor');
 
-                                // Save cursor position
-                                const sel = window.getSelection();
-                                let cursorOffset = 0;
-                                if (sel.rangeCount > 0 && editor.contains(sel.anchorNode)) {
-                                    cursorOffset = sel.getRangeAt(0).startOffset;
-                                }
+                                // Save cursor position as character offset from start
+                                const savedPos = saveCursorPosition(editor);
 
                                 editor.innerHTML = plaintext;
                                 updateStats();
+
+                                // Restore cursor position
+                                restoreCursorPosition(editor, savedPos);
 
                                 // Flash sync indicator
                                 setSaveIndicator('SYNCED', '#3b82f6');
@@ -753,8 +798,12 @@
             setSaveIndicator('SAVING…', '#FFF500');
             setFooterState('SYNCING', '#FFF500');
 
+            const editor = document.getElementById('vault-editor');
+            // Save cursor before async work
+            const savedPos = saveCursorPosition(editor);
+
             try {
-                const content = document.getElementById('vault-editor').innerHTML;
+                const content = editor.innerHTML;
                 const encrypted = await encrypt(currentKey, content);
                 await saveNote(currentHash, currentSalt, encrypted.iv, encrypted.ciphertext);
                 setSaveIndicator('SAVED', '#22c55e');
@@ -764,6 +813,9 @@
                 setFooterState('ERROR', '#FF4400');
                 console.error(err);
             }
+
+            // Restore cursor after save completes
+            restoreCursorPosition(editor, savedPos);
             isSaving = false;
         }
 
